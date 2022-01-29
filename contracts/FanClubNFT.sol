@@ -14,7 +14,7 @@ import "hardhat/console.sol";
 contract FanClubNFT is ERC1155 {
     // artistId = address of the artist
     struct ArtistAttributes {
-        uint256 artistId;
+        address artistId;
         string artistName;
         string artistImageURI;
         string artCategory;
@@ -54,13 +54,14 @@ contract FanClubNFT is ERC1155 {
     This function is supposed to be called when any artist registers themselves
      */
     function addArtist(
+        address _artistAddress,
         string memory _artistName,
         string memory _imageURI,
         string memory _artCategory
     ) public {
         artists.push(
             ArtistAttributes({
-                artistId: artists.length + 1,
+                artistId: _artistAddress,
                 artistName: _artistName,
                 artistImageURI: _imageURI,
                 artCategory: _artCategory
