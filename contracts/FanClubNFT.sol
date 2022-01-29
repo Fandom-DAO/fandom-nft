@@ -6,45 +6,44 @@ import "hardhat/console.sol";
 // import libraries for NFT implementation
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "hardhat/console.sol";
 
-contract FanClubNFT is ERC721URIStorage {
+contract FanClubNFT is ERC1155 {
+    // artistId = address of the artist
     struct ArtistAttributes {
         uint256 artistId;
         string artistName;
-        string imageURI;
+        string artistImageURI;
         string artCategory;
     }
+
+    // An array to store all artists onboarded
+    ArtistAttributes[] artists;
 
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
-    // A mapping of tokenIds to token attributes
-    mapping(uint256 => ArtistAttributes) public tokenIdToTokenAttributes;
+    struct tokenInfo {
+        string tokenURI;
+        uint32 count;
+        uint32 totalCount;
+        uint256 tokenPrice;
+    }
 
-    ArtistAttributes[] artists;
+    // A mapping of tokenIds to tokenInfo
+    mapping(uint256 => tokenInfo) public tokenIdToTokenInfo;
 
-    // A mapping to store the address of the owner  of the NFT
-    mapping(address => uint256) public FanClubNFTOwners;
+    // A mapping of artistId to tokenID
+    mapping(address => uint256[]) public artistIdtoTokenId;
 
     event FanClubNFTMinted(address sender, uint256 tokenId);
 
-    constructor() ERC721("FanClubNFT", "FAN") {
+    constructor() ERC1155("") {
         console.log("This is Fan Club NFT contract. Heck yeahh !! ");
         _tokenIds.increment();
-    }
-
-    function mintFanClubNFT(uint256 _artistId) public {
-        uint256 newTokenId = _tokenIds.current();
-
-        _safeMint(msg.sender, newTokenId);
-        tokenIdToTokenAttributes[newTokenId] = ArtistAttributes({
-            artistId: artists[_artistId].artistId,
-            artistName: artists[_artistId].artistName,
-            imageURI: artists[_artistId].imageURI,
-            artCategory: artists[_artistId].artCategory
-        });
     }
 
     function getAllArtists() public view returns (ArtistAttributes[] memory) {
@@ -63,15 +62,11 @@ contract FanClubNFT is ERC721URIStorage {
             ArtistAttributes({
                 artistId: artists.length + 1,
                 artistName: _artistName,
-                imageURI: _imageURI,
+                artistImageURI: _imageURI,
                 artCategory: _artCategory
             })
         );
 
         console.log("Artist added");
-    }
-
-    function createNFT() public{
-        
     }
 }
