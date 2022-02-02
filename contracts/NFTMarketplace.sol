@@ -10,7 +10,6 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract NFTMarketplace is Ownable, ReentrancyGuard {
-    
     // Counter for tokenIds
     // using Counters for Counters.Counter;
     // Counters.Counter private _tokenIds;
@@ -29,21 +28,20 @@ contract NFTMarketplace is Ownable, ReentrancyGuard {
     }
 
     // All the information needed for the token
-    // Here we don't need the Description and Type because that is stored in the metadata on IPFS   
+    // Here we don't need the Description and Type because that is stored in the metadata on IPFS
     struct TokenInfo {
         uint256 tokenId;
         uint256 tokenPrice;
-        uint32 count;
+        uint32 soldCount;
         uint32 totalCount;
-        address currentOwner;
-        address creator;
+        address payable currentOwner;
+        address payable creator;
     }
 
     // Emits the event that the NFT is minted and listed
     event FanClubNFTMinted(
         uint256 indexed tokenId,
         address indexed nftContract
-
     );
 
     // An array to store all artists onboarded
@@ -75,7 +73,10 @@ contract NFTMarketplace is Ownable, ReentrancyGuard {
         string memory _imageURI,
         string memory _artCategory
     ) public {
-        require(addressToIndex[_artistAddress] == 0, "Artist Already Registered");
+        require(
+            addressToIndex[_artistAddress] == 0,
+            "Artist Already Registered"
+        );
 
         artists.push(
             ArtistAttributes({
@@ -91,11 +92,11 @@ contract NFTMarketplace is Ownable, ReentrancyGuard {
 
         console.log("Artist added");
     }
-    
+
     // Listing the NFT
     function listNFT(
         address nftContract,
-        address artistAddress,
+        address payable artistAddress,
         uint256 _tokenId,
         uint32 _amount,
         uint256 _tokenPrice
@@ -107,12 +108,12 @@ contract NFTMarketplace is Ownable, ReentrancyGuard {
         artistIdToTokenId[artistAddress].push(_tokenId);
 
         // Adding tokenId mapping to tokenInfo
-        TokenInfo memory newTokenInfo = TokenInfo ({
+        TokenInfo memory newTokenInfo = TokenInfo({
             tokenId: _tokenId,
-            count: 0,
+            soldCount: 0,
             totalCount: _amount,
             tokenPrice: _tokenPrice,
-            currentOwner: address(this),
+            currentOwner: payable(address(this)),
             creator: artistAddress
         });
 
@@ -120,24 +121,58 @@ contract NFTMarketplace is Ownable, ReentrancyGuard {
 
         nfts.push(newTokenInfo);
 
-        IERC1155(nftContract).safeTransferFrom(msg.sender, address(this), _tokenId, _amount, "");
-
+        IERC1155(nftContract).safeTransferFrom(
+            msg.sender,
+            address(this),
+            _tokenId,
+            _amount,
+            ""
+        );
+    }
+    // Buy NFTs
+    function buyNFTs(address nftContract, uint256 tokenId)
+        public
+        payable
+        nonReentrant
+    {
+        uint256 price = tokenIdToTokenInfo[tokenId].tokenPrice;
+        require(
+            msg.value == price,
+            "Please submit the asking price in order to complete the purchase"
+        );
+        tokenIdToTokenInfo[tokenId].creator.transfer(msg.value);
+        IERC1155(nftContract).safeTransferFrom(
+            address(this),
+            msg.sender,
+            tokenId,
+            1,
+            ""
+        );
+        tokenIdToTokenInfo[tokenId].currentOwner = payable(msg.sender);
+        tokenIdToTokenInfo[tokenId].soldCount += 1;
     }
 
-
     // Returns info of an specific artist
-    function getArtistInfo(address _artistAddress) public view returns (ArtistAttributes memory){
+    function getArtistInfo(address _artistAddress)
+        public
+        view
+        returns (ArtistAttributes memory)
+    {
         return artists[addressToIndex[_artistAddress] - 1];
     }
 
     // Getting all NFTs minted by a specific Artist
-    function getNFTsOfArtist(address _artistAddress) public view returns (TokenInfo[] memory){
-        uint tokenId = 0;
+    function getNFTsOfArtist(address _artistAddress)
+        public
+        view
+        returns (TokenInfo[] memory)
+    {
+        uint256 tokenId = 0;
         uint256 arrayLength = artistIdToTokenId[_artistAddress].length;
 
         TokenInfo[] memory artistAllNFTs = new TokenInfo[](arrayLength);
-        
-        for(uint32 i = 0; i < arrayLength; i++) {
+
+        for (uint32 i = 0; i < arrayLength; i++) {
             // Getting each tokenId related to this Artist
             tokenId = artistIdToTokenId[_artistAddress][i];
 
@@ -148,8 +183,7 @@ contract NFTMarketplace is Ownable, ReentrancyGuard {
         return artistAllNFTs;
     }
 
-    function getAllNFTs() public view returns (TokenInfo[] memory){
+    function getAllNFTs() public view returns (TokenInfo[] memory) {
         return nfts;
     }
-
 }
