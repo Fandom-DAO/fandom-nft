@@ -13,6 +13,7 @@ contract FanClubNFT is ERC1155, Ownable {
     // To set up the Name of the collection and Symbol of the Token
     string public name;
     string public symbol;
+    address contractAddress;
 
     // Counter for all the NFT Ids
     using Counters for Counters.Counter;
@@ -26,8 +27,18 @@ contract FanClubNFT is ERC1155, Ownable {
         uint256 tokenPrice;
     }
 
-    constructor() ERC1155("") {
-        console.log("This is Fan Club NFT contract. Heck yeahh !! ");
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        address marketplaceAddress
+    ) ERC1155("") {
+        setName(_name, _symbol);
+        contractAddress = marketplaceAddress;
+    }
+
+    function setName(string memory _name, string memory _symbol) private {
+        name = _name;
+        symbol = _symbol;
     }
 
     function launchNFT(
@@ -38,10 +49,10 @@ contract FanClubNFT is ERC1155, Ownable {
         _tokenIds.increment();
         uint256 tokenId = _tokenIds.current();
 
-        setTokenURI(tokenId, _tokenURI);
-
         // Minting the NFT
         _mint(msg.sender, tokenId, _amount, "");
+        setTokenURI(tokenId, _tokenURI);
+        setApprovalForAll(contractAddress, true);
 
         TokenInfo memory newToken = TokenInfo(tokenId, _amount, _tokenPrice);
 
