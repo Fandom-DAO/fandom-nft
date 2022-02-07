@@ -43,9 +43,8 @@ contract FanClubNFT is ERC1155, Ownable {
 
     function launchNFT(
         uint32 _amount,
-        uint256 _tokenPrice,
         string memory _tokenURI
-    ) public returns (TokenInfo memory) {
+    ) public returns (uint) {
         _tokenIds.increment();
         uint256 tokenId = _tokenIds.current();
 
@@ -54,9 +53,9 @@ contract FanClubNFT is ERC1155, Ownable {
         setTokenURI(tokenId, _tokenURI);
         setApprovalForAll(contractAddress, true);
 
-        TokenInfo memory newToken = TokenInfo(tokenId, _amount, _tokenPrice);
+        // TokenInfo memory newToken = TokenInfo(tokenId, _amount, _tokenPrice);
 
-        return newToken;
+        return tokenId;
     }
 
     function setTokenURI(uint256 tokenId, string memory _newURI)
