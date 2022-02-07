@@ -5,69 +5,73 @@ import "hardhat/console.sol";
 
 // import libraries for NFT implementation
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "hardhat/console.sol";
 
-contract FanClubNFT is ERC1155 {
-    // artistId = address of the artist
-    struct ArtistAttributes {
-        address artistId;
-        string artistName;
-        string artistImageURI;
-        string artCategory;
-    }
+contract FanClubNFT is ERC1155, Ownable {
+    // To set up the Name of the collection and Symbol of the Token
+    string public name;
+    string public symbol;
+    address contractAddress;
 
-    // An array to store all artists onboarded
-    ArtistAttributes[] artists;
-
+    // Counter for all the NFT Ids
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
-    struct tokenInfo {
-        string tokenURI;
-        uint32 count;
+    mapping(uint256 => string) private _uris;
+
+    struct TokenInfo {
+        uint256 tokenId;
         uint32 totalCount;
         uint256 tokenPrice;
     }
 
-    // A mapping of tokenIds to tokenInfo
-    mapping(uint256 => tokenInfo) public tokenIdToTokenInfo;
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        address marketplaceAddress
+    ) ERC1155("") {
+        setName(_name, _symbol);
+        contractAddress = marketplaceAddress;
+    }
 
-    // A mapping of artistId to tokenID
-    mapping(address => uint256[]) public artistIdtoTokenId;
+    function setName(string memory _name, string memory _symbol) private {
+        name = _name;
+        symbol = _symbol;
+    }
 
-    event FanClubNFTMinted(address sender, uint256 tokenId);
-
-    constructor() ERC1155("") {
-        console.log("This is Fan Club NFT contract. Heck yeahh !! ");
+    function launchNFT(
+        uint32 _amount,
+        string memory _tokenURI
+    ) public returns (uint) {
         _tokenIds.increment();
+        uint256 tokenId = _tokenIds.current();
+
+        // Minting the NFT
+        _mint(msg.sender, tokenId, _amount, "");
+        setTokenURI(tokenId, _tokenURI);
+        setApprovalForAll(contractAddress, true);
+
+        // TokenInfo memory newToken = TokenInfo(tokenId, _amount, _tokenPrice);
+
+        return tokenId;
     }
 
-    function getAllArtists() public view returns (ArtistAttributes[] memory) {
-        return artists;
+    function setTokenURI(uint256 tokenId, string memory _newURI)
+        public
+        onlyOwner
+    {
+        require(bytes(_uris[tokenId]).length == 0, "Cannot set uri twice");
+        _uris[tokenId] = _newURI;
     }
 
-    /**
-    This function is supposed to be called when any artist registers themselves
-     */
-    function addArtist(
-        address _artistAddress,
-        string memory _artistName,
-        string memory _imageURI,
-        string memory _artCategory
-    ) public {
-        artists.push(
-            ArtistAttributes({
-                artistId: _artistAddress,
-                artistName: _artistName,
-                artistImageURI: _imageURI,
-                artCategory: _artCategory
-            })
-        );
-
-        console.log("Artist added");
+    function uri(uint256 _tokenId)
+        public
+        view
+        override
+        returns (string memory)
+    {
+        return _uris[_tokenId];
     }
 }
