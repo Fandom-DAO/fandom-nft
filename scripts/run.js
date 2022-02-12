@@ -1,19 +1,25 @@
 const main = async () => {
-  const fanClubNFTContractFactory = await hre.ethers.getContractFactory(
-    'FanClubNFT'
-  );
-  const fanClubNFTContract = await fanClubNFTContractFactory.deploy();
-  await fanClubNFTContract.deployed();
-  console.log('Contract deployed to:', fanClubNFTContract.address);
+  const NFTMarket = await hre.ethers.getContractFactory('NFTMarketplace');
+  const nftMarket = await NFTMarket.deploy();
 
-  txn = await fanClubNFTContract.addArtist("Prateek Kuhaad", "image.com", "Singer");
-  await txn.wait();
-  
+  await nftMarket.deployed();
 
-  txn = await fanClubNFTContract.addArtist("Adele", "image.com", "Singer");
+  console.log('nftMarket deployed to:', nftMarket.address);
+
+  const fandomNFT = await hre.ethers.getContractFactory('FanClubNFT');
+  const nftContract = await fandomNFT.deploy("Fando","FAN",nftMarket.address);
+
+  await nftContract.deployed();
+
+  console.log('NFT Contract deployed to:', nftContract.address);
+
+  txn = await nftContract.launchNFT(10, "https://ipfs.io/ipfs/QmYfmHvCZsxgzPWMUynMDNGYpAu4VYCU2R6mMg37hX2E25?filename=fire.json" );
   await txn.wait();
-  const artists = await fanClubNFTContract.getAllArtists();
-  console.log("Artists --->" , artists);
+  console.log("tx", txn)
+  console.log('NFTs launched ---', txn.data);
+
+  txn = await nftContract.uri(1);
+  console.log('URI --->', txn);
 };
 
 const runMain = async () => {
