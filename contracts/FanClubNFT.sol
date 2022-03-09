@@ -6,10 +6,9 @@ import "hardhat/console.sol";
 // import libraries for NFT implementation
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
-contract FanClubNFT is ERC1155, Ownable {
+contract FanClubNFT is ERC1155 {
     // To set up the Name of the collection and Symbol of the Token
     string public name;
     string public symbol;
@@ -41,10 +40,10 @@ contract FanClubNFT is ERC1155, Ownable {
         symbol = _symbol;
     }
 
-    function launchNFT(
-        uint32 _amount,
-        string memory _tokenURI
-    ) public returns (uint) {
+    function launchNFT(uint32 _amount, string memory _tokenURI)
+        public
+        returns (uint256)
+    {
         _tokenIds.increment();
         uint256 tokenId = _tokenIds.current();
 
@@ -58,10 +57,7 @@ contract FanClubNFT is ERC1155, Ownable {
         return tokenId;
     }
 
-    function setTokenURI(uint256 tokenId, string memory _newURI)
-        public
-        onlyOwner
-    {
+    function setTokenURI(uint256 tokenId, string memory _newURI) public {
         require(bytes(_uris[tokenId]).length == 0, "Cannot set uri twice");
         _uris[tokenId] = _newURI;
     }

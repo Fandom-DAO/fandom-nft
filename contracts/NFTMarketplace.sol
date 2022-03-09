@@ -36,6 +36,10 @@ contract NFTMarketplace is ReentrancyGuard, ERC1155Holder {
         uint32 totalCount;
         address payable currentOwner;
         address payable creator;
+        string tokenName;
+        string tokenDescription;
+        string tokenImage;
+        string tokenType;
     }
 
     // Emits the event that the NFT is minted and listed
@@ -99,7 +103,11 @@ contract NFTMarketplace is ReentrancyGuard, ERC1155Holder {
         address payable artistAddress,
         uint256 _tokenId,
         uint32 _amount,
-        uint256 _tokenPrice
+        uint256 _tokenPrice,
+        string memory _tokenName,
+        string memory _tokenDescription,
+        string memory _tokenImage,
+        string memory _tokenType
     ) public nonReentrant {
         // Checking if the artist is registered or not
         require(addressToIndex[artistAddress] > 0, "No such Artist Registered");
@@ -114,7 +122,11 @@ contract NFTMarketplace is ReentrancyGuard, ERC1155Holder {
             totalCount: _amount,
             tokenPrice: _tokenPrice,
             currentOwner: payable(address(this)),
-            creator: artistAddress
+            creator: artistAddress,
+            tokenName: _tokenName,
+            tokenDescription: _tokenDescription,
+            tokenImage: _tokenImage,
+            tokenType: _tokenType
         });
 
         tokenIdToTokenInfo[_tokenId] = newTokenInfo;
@@ -129,6 +141,7 @@ contract NFTMarketplace is ReentrancyGuard, ERC1155Holder {
             ""
         );
     }
+
     // Buy NFTs
     function buyNFTs(address nftContract, uint256 tokenId)
         public
