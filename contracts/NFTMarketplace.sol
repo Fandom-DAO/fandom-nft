@@ -153,7 +153,10 @@ contract NFTMarketplace is ReentrancyGuard, ERC1155Holder {
             msg.value == price,
             "Please submit the asking price in order to complete the purchase"
         );
-        tokenIdToTokenInfo[tokenId].creator.transfer(msg.value);
+        (bool sent, bytes memory data) = tokenIdToTokenInfo[tokenId]
+            .creator
+            .call{value: msg.value}("");
+        require(sent, "Failed to send ether");
         IERC1155(nftContract).safeTransferFrom(
             address(this),
             msg.sender,
